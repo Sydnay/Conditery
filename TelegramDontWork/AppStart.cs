@@ -1,6 +1,7 @@
 ﻿using Conditery.Constants;
 using Conditery.Models;
 using Conditery.Repository;
+using System.Configuration;
 using VkBotFramework;
 using VkBotFramework.Models;
 using VkNet.Enums.SafetyEnums;
@@ -11,9 +12,9 @@ namespace Conditery
 {
     internal class AppStart
     {
-        const string token = "vk1.a.7KyPdYKqp5ANTIBuBFlNKW3wXvLJFE3AsVoc8zm-mmU8KcInZ6-EgrhXxbdp17HSt6Q52gllyfFp2JynQ6ZGBWWYhDyfsE9S2ir9APQNNtL_dglHec77iUB2fSFBd7cRmRhpxeoVnQvTbdIa225E8PSPb6YNytUNiybnK9aIyjN6Q-oHT_F3bopuEOE6_81t5x82gbgr3tlkmYbkoPHvlA";
-        const string groupUri = "https://vk.com/club216986922";
-        public static readonly VkBot bot = new VkBot(token, groupUri);
+        static AppSettingsSection config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).AppSettings;
+        public static readonly VkBot bot = new VkBot(config.Settings["groupToken"].Value, config.Settings["groupUri"].Value);
+
         private readonly IUserRepository userRepository;
         private readonly IOrderRepository orderRepository;
         public AppStart(IUserRepository userRepository, IOrderRepository orderRepository)
