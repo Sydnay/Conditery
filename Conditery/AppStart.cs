@@ -10,7 +10,7 @@ using VkNet.Model.RequestParams;
 
 namespace Conditery
 {
-    internal class AppStart
+    public class AppStart
     {
         static AppSettingsSection config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).AppSettings;
         public static readonly VkBot bot = new VkBot(config.Settings["groupToken"].Value, config.Settings["groupUri"].Value);
