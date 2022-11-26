@@ -37,13 +37,13 @@ namespace Conditery
             var userId = e.Message.FromId ?? -1;
             var user = userRepository.GetUser(userId);
             var userCurrentEvent = user?.UserEventId ?? -1;
-
+            var a = (await bot.Api.Users.GetAsync(new List<long> { e.Message.FromId ?? -1 })).FirstOrDefault()!;
             if (user?.UserEventId is null && msg == "/start")
             {
                 HandleStart1(sender, e);
                 return;
             }
-            if(userCurrentEvent == (int)EventType.HandleStart && msg == KeyboardText.createOrder1)
+            if (userCurrentEvent == (int)EventType.HandleStart && msg == KeyboardText.createOrder1)
             {
                 userRepository.SetCurrentEvent(userId, EventType.HandleCreateOrder);
                 HandleCreateOrder2(sender, e);
@@ -91,7 +91,7 @@ namespace Conditery
                 HandleOrderAttachments8(sender, e);
                 return;
             }
-            if (userCurrentEvent == (int)EventType.HandleOrderAttachments || userCurrentEvent== (int)EventType.HandleOrderDate)
+            if (userCurrentEvent == (int)EventType.HandleOrderAttachments || (userCurrentEvent == (int)EventType.HandleOrderDate && msg == KeyboardText.orderReady7))
             {
                 userRepository.SetCurrentEvent(userId, EventType.HandleStart);
                 HandleOrderReady9(sender, e);
@@ -109,7 +109,7 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Message = Message.start1,
-                PeerId = e.Message.PeerId,
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
                 Keyboard = keyboard.Build(),
             });
@@ -131,7 +131,7 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Message = Message.start1,
-                PeerId = e.Message.PeerId,
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
                 Keyboard = keyboard.Build(),
             });
@@ -156,7 +156,7 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Message = Message.createOrder2,
-                PeerId = e.Message.PeerId,
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
                 Keyboard = keyboard.Build(),
             });
@@ -176,9 +176,9 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Message = Message.orderDetails3,
-                PeerId = e.Message.PeerId,
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
-                Keyboard=keyboard.Build(),
+                Keyboard = keyboard.Build(),
             });
 
             Console.WriteLine($"HandleCreation");
@@ -195,7 +195,7 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Message = Message.orderCity4,
-                PeerId = e.Message.PeerId,
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
                 Keyboard = keyboard.Build(),
             });
@@ -220,7 +220,7 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Message = Message.orderPriceRange5,
-                PeerId = e.Message.PeerId,
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
                 Keyboard = keyboard.Build()
             });
@@ -247,7 +247,7 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Message = Message.orderExecutionDate6,
-                PeerId = e.Message.PeerId,
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
                 Keyboard = keyboard.Build()
             });
@@ -257,7 +257,15 @@ namespace Conditery
         async void HandleOrderDate7(object? sender, MessageReceivedEventArgs e)
         {
             var order = orderRepository.GetIncompleteOrder(e.Message.FromId ?? 0);
-            order.ExecutionDate = DateTime.Parse(e.Message.Text);
+            try
+            {
+                order.ExecutionDate = DateTime.Parse(e.Message.Text);
+            }
+            catch
+            {
+                userRepository.SetCurrentEvent(e.Message.FromId ?? -1, EventType.HandleOrderPriceRange);
+                return;
+            }
             orderRepository.SaveChangeAsync();
 
             var keyboard = new KeyboardBuilder();
@@ -268,7 +276,7 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Message = Message.orderConfirmation7,
-                PeerId = e.Message.PeerId,
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
                 Keyboard = keyboard.Build()
             });
@@ -283,7 +291,7 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Message = Message.orderAttachments8,
-                PeerId = e.Message.PeerId,
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
                 Keyboard = keyboard.Build()
             });
@@ -304,12 +312,20 @@ namespace Conditery
             AppStart.bot.Api.Messages.Send(new MessagesSendParams
             {
                 Attachments = attach.Select(x => x.Instance),
-                Message = Message.orderReady,
-                PeerId = e.Message.PeerId,
+                Message = Message.orderReady + $"\n\nИнформация о заказе:\nТип: {order.Type}\nДетали: {order.Description}\nГород: {order.Location}\nЦеновой диапазон: {order.Price}\nДата исполнения: {order.ExecutionDate}",
+                PeerId = e.Message.FromId,
                 RandomId = Math.Abs(Environment.TickCount),
                 Keyboard = keyboard.Build()
             });
-
+            var user = (await bot.Api.Users.GetAsync(new List<long> { e.Message.FromId ?? -1 })).FirstOrDefault();
+            AppStart.bot.Api.Messages.Send(new MessagesSendParams
+            {
+                Attachments = attach.Select(x => x.Instance),
+                Message = $"Заказ от {user.FirstName} {user.LastName} https://vk.com/id{user.Id} \n\nТип: {order.Type}\nДетали: {order.Description}\nГород: {order.Location}\nЦеновой диапазон: {order.Price}\nДата исполнения: {order.ExecutionDate}",
+                PeerId = 2000000001,
+                RandomId = Math.Abs(Environment.TickCount),
+                Keyboard = keyboard.Build()
+            });
             Console.WriteLine($"HandleCreation");
         }
 

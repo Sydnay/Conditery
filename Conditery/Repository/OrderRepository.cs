@@ -24,7 +24,7 @@ namespace Conditery.Repository
             }
             catch (Exception ex)
             {
-                throw ex;
+                Console.WriteLine(ex);
             }
         }
 
@@ -40,7 +40,7 @@ namespace Conditery.Repository
 
         public Order GetOrder(long orderId)
         {
-            throw new NotImplementedException();
+            return context.Orders.OrderBy(x => x.Id).FirstOrDefault();
         }
 
         public void SaveChangeAsync()
