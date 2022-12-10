@@ -1,5 +1,6 @@
 ﻿using Conditery.Context;
 using Conditery.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,51 +9,82 @@ using System.Threading.Tasks;
 
 namespace Conditery.Repository
 {
-    public class OrderRepository : IOrderRepository
+    public class OrderRepository : BaseRepository, IOrderRepository
     {
         private readonly ApplicationContext context;
-        public OrderRepository(ApplicationContext context)
+        public OrderRepository(ApplicationContext context) : base(context)
         {
             this.context = context;
         }
-        public void AddOrder(Order order)
+        public async Task AddOrder(Order order)
         {
             try
             {
-                context.Orders.Add(order);
-                context.SaveChanges();
+                await _semaphore.WaitAsync();
+
+                await context.Orders.AddAsync(order);
+                await context.SaveChangesAsync();
             }
-            catch (Exception ex)
+            finally
             {
-                Console.WriteLine(ex);
+                _semaphore.Release();
             }
         }
 
 
-        public Order GetIncompleteOrder(long userId)=> context.Orders.Where(x=>x.UpdateTime == DateTime.MinValue).FirstOrDefault(o => o.UserId == userId);
-
-        public void DeleteIncompleteOrder(long userId)
-        {
-            var order = GetIncompleteOrder(userId);
-            context.Orders.Remove(order);
-            context.SaveChanges();
-        }
-
-        public Order GetOrder(long orderId)
-        {
-            return context.Orders.OrderBy(x => x.Id).FirstOrDefault();
-        }
-
-        public void SaveChangeAsync()
+        public async Task<Order> GetIncompleteOrder(long userId)
         {
             try
             {
-                context.SaveChanges();
-            }
-            catch (Exception ex)
-            {
+                await _semaphore.WaitAsync();
 
-                throw ex;
+                return await context.Orders.Where(x => x.UpdateTime == DateTime.MinValue).FirstOrDefaultAsync(o => o.UserId == userId);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        public async Task<Order> GetOrder(long orderId)
+        {
+            try
+            {
+                await _semaphore.WaitAsync();
+
+                return await context.Orders.FirstOrDefaultAsync(x => x.Id == orderId);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        public async Task UpdateOrder(Order order)
+        {
+            try
+            {
+                await _semaphore.WaitAsync();
+                context.Orders.Update(order);
+                await context.SaveChangesAsync();
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        public async Task DeleteOrder(Order order)
+        {
+            try
+            {
+                await _semaphore.WaitAsync();
+                context.Orders.Remove(order);
+                await context.SaveChangesAsync();
+            }
+            finally
+            {
+                _semaphore.Release();
             }
         }
     }

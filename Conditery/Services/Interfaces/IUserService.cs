@@ -5,13 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Conditery.Repository
+namespace Conditery.Services
 {
-    public interface IUserRepository : IBaseRepository
+    public interface IUserService
     {
+        Task SetCurrentEvent(long userId, EventType currEvent);
         Task<User> GetUser(long userId);
-        Task<List<User>> GetAllUsers();
         Task AddUser(User users);
-        Task ABOBA();
     }
 }

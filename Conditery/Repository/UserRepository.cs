@@ -1,5 +1,6 @@
 ﻿using Conditery.Context;
 using Conditery.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,50 +9,57 @@ using System.Threading.Tasks;
 
 namespace Conditery.Repository
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository : BaseRepository, IUserRepository
     {
         private readonly ApplicationContext context;
-        private readonly
-        object locker = new object();
-        public UserRepository(ApplicationContext context)
+
+        public UserRepository(ApplicationContext context) : base(context)
         {
             this.context = context;
         }
-        public User GetUser(long userId)
-        {
-            lock (locker)
-                return context.Users.FirstOrDefault(x => x.UserId == userId);
-        }
-
-        public List<User> GetAllUsers()
-        {
-            lock (locker)
-                return context.Users.ToList();
-        }
-
-        public void AddUser(User users)
+        public async Task<User> GetUser(long userId)
         {
             try
             {
-                context.Users.Add(users);
-                context.SaveChanges();
+                await _semaphore.WaitAsync();
+
+                return await context.Users.FirstOrDefaultAsync(x => x.UserId == userId);
             }
-            catch (Exception ex)
+            finally
             {
-                throw ex;
+                _semaphore.Release();
             }
         }
 
-        public void SetCurrentEvent(long userId, EventType currEvent)
+        public async Task<List<User>> GetAllUsers()
         {
-            var users = GetUser(userId);
+            try
+            {
+                await _semaphore.WaitAsync();
 
-            if (users == null)
-                throw new ArgumentNullException(nameof(users));
-
-            users.UserEventId = (int)currEvent;
-            context.SaveChanges();
+                return await context.Users.ToListAsync();
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
+
+        public async Task AddUser(User users)
+        {
+            try
+            {
+                await _semaphore.WaitAsync();
+
+                await context.Users.AddAsync(users);
+                await context.SaveChangesAsync();
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
         public async Task ABOBA()
         {
             if (context.UserEvents.FirstOrDefault() is not null)

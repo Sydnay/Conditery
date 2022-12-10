@@ -5,14 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Conditery.Repository
+namespace Conditery.Services
 {
-    public interface IOrderRepository : IBaseRepository
+    public interface IOrderService
     {
         Task AddOrder(Order order);
-        Task<Order> GetOrder(long orderId);
+        Task<Order> GetOrder(long userId);
         Task<Order> GetIncompleteOrder(long userId);
         Task UpdateOrder(Order order);
-        Task DeleteOrder(Order order);
+        Task DeleteIncompleteOrder(long userId);
     }
 }
