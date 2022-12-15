@@ -9,7 +9,7 @@ namespace Conditery.Repository
 {
     public class BaseRepository : IBaseRepository
     {
-        protected SemaphoreSlim _semaphore = new SemaphoreSlim(1,1);
+        protected static SemaphoreSlim _semaphore = new SemaphoreSlim(1,1);
         protected ApplicationContext _context;
         public BaseRepository(ApplicationContext context)
         {

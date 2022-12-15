@@ -41,6 +41,9 @@ namespace Conditery.Services
         {
             return await _orderRepository.GetOrder(orderId);
         }
-
+        public async Task<List<Order>> GetUserOrders(long userId)
+        {
+            return await _orderRepository.GetAllUserOrders(userId);
+        }
     }
 }

@@ -59,6 +59,19 @@ namespace Conditery.Repository
                 _semaphore.Release();
             }
         }
+        public async Task<List<Order>> GetAllUserOrders(long userId)
+        {
+            try
+            {
+                await _semaphore.WaitAsync();
+
+                return await context.Orders.Where(x => x.UserId == userId).ToListAsync();
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
 
         public async Task UpdateOrder(Order order)
         {

@@ -24,10 +24,10 @@ static AppStart BuildConfig()
         options.UseSqlServer(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).AppSettings.Settings["connectionString"].Value);
         options.EnableSensitiveDataLogging();
     },
-    lifetime: ServiceLifetime.Transient);
+    lifetime: ServiceLifetime.Singleton);
 
-    services.AddTransient<IUserRepository, UserRepository>();
-    services.AddTransient<IOrderRepository, OrderRepository>();
+    services.AddSingleton<IUserRepository, UserRepository>();
+    services.AddSingleton<IOrderRepository, OrderRepository>();
 
     services.AddTransient<IOrderService, OrderService>();
     services.AddTransient<IUserService, UserService>();

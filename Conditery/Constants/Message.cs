@@ -10,6 +10,7 @@ namespace Conditery.Constants
     {
         public const string start1 = "Здравствуйте! Заполните короткую анкету и мы отправим ваш заказ нашим кондитерам! \n\nЧтобы начать, нажмите на кнопку \"Cоздать заказ\"";
         public const string createOrder2 = "Давйте составим заказ вместе! Выберите тип изделия \n\nЕсли ни один из вариантов вам не подошёл, нажмите \"Другое\" и добавьте свой тип в следующем пункте анкеты";
+        public const string getListOrders2 = "Выебирте заказ";
         public const string orderDetails3 = "Теперь нужно добавить описание заказа.\n\nОпишите свои пожелания, например: начинку, крем, сочетание вкусов, цвет, дизайн.\n\nДизайн изделия можно будет прикрепить в последнем пункте анкеты, вы также можете приложить фотографию из нашей группы.";
         public const string orderCity4 = "Ещё несколько шагов!\n\nУкажите город, в котором вы заберёте свой заказ:";
         public const string orderPriceRange5 = "Наши кондитеры работают с тортами разной стоимости, чтобы каждый мог воспользоваться нашим сервисом.\n\nПожалуйста, укажите диапазон цены:";
@@ -23,6 +24,7 @@ namespace Conditery.Constants
     static internal class KeyboardText
     {
         public const string createOrder1 = "Создать заказ";
+        public const string listOrders1 = "Мои заказы";
         public const string orderType2_1 = "Пирожные";
         public const string orderType2_2 = "Торты";
         public const string orderType2_3 = "Пироги";

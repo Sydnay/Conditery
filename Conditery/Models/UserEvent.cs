@@ -13,6 +13,7 @@ namespace Conditery.Models
     {
         HandleStart = 1,
         HandleCreateOrder,
+        HandleGetListOrders,
         HandleOrderType,
         HandleOrderDetails,
         HandleOrderCity,

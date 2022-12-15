@@ -11,6 +11,7 @@ namespace Conditery.Services
     {
         Task AddOrder(Order order);
         Task<Order> GetOrder(long userId);
+        Task<List<Order>> GetUserOrders(long userId);
         Task<Order> GetIncompleteOrder(long userId);
         Task UpdateOrder(Order order);
         Task DeleteIncompleteOrder(long userId);

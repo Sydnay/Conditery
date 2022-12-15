@@ -39,7 +39,6 @@ namespace Conditery
                 Console.WriteLine(api.Token);
                 Log.Information("Бот начал работу");
 
-                bot.OnGroupUpdateReceived += async (s, e) => await HandleStart(s, e);
                 bot.OnMessageReceived += async (s, e) => await HandleMessage(s, e);
 
                 Console.WriteLine("SstartReceiveng");
@@ -60,71 +59,87 @@ namespace Conditery
             {
                 var user = await _userService.GetUser(userId);
                 var userCurrentEvent = user?.UserEventId ?? -1;
-
-                if (user is null)
+                if (user?.UserEventId is null && msg == "Начать")
+                {
+                    HandleStart1(sender, e);
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} зарегистрировался");
                     return;
-
+                }
                 if (userCurrentEvent == (int)EventType.HandleStart && msg == KeyboardText.createOrder1)
                 {
                     await _userService.SetCurrentEvent(userId, EventType.HandleCreateOrder);
                     await HandleCreateOrder2(sender, e);
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {userId} начал создание заказа");
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} начал создание заказа");
+                    return;
+                }
+                if (userCurrentEvent == (int)EventType.HandleStart && msg == KeyboardText.listOrders1)
+                {
+                    await _userService.SetCurrentEvent(userId, EventType.HandleGetListOrders);
+                    await HandleGetListOrders2(sender, e);
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} получил список заказов");
                     return;
                 }
                 if (msg == KeyboardText.cancelOrder)
                 {
                     await _userService.SetCurrentEvent(userId, EventType.HandleStart);
                     await HandleCancelOrder(sender, e);
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {userId} Отменил заказ");
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} Отменил заказ");
                     return;
                 }
                 if (userCurrentEvent == (int)EventType.HandleCreateOrder && (msg == KeyboardText.orderType2_1 || msg == KeyboardText.orderType2_2 || msg == KeyboardText.orderType2_3 || msg == KeyboardText.orderType2_4 || msg == KeyboardText.orderType2_5 || msg == KeyboardText.orderType2_6 || msg == KeyboardText.orderType2_7 || msg == KeyboardText.orderType2_8 || msg == KeyboardText.orderType2_9))
                 {
                     await _userService.SetCurrentEvent(userId, EventType.HandleOrderType);
                     await HandlerOrderType3(sender, e);
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {userId} выбрал тип заказа");
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} выбрал тип заказа");
+                    return;
+                }
+                if (userCurrentEvent == (int)EventType.HandleGetListOrders && msg.Contains("Заказ №"))
+                {
+                    await _userService.SetCurrentEvent(userId, EventType.HandleStart);
+                    await HandleGetOrder3(sender, e);
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} получил свой заказ");
                     return;
                 }
                 if (userCurrentEvent == (int)EventType.HandleOrderType)
                 {
                     await _userService.SetCurrentEvent(userId, EventType.HandleOrderDetails);
                     await HandlerOrderDetails4(sender, e);
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {userId} добавил описание заказа");
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} добавил описание заказа");
                     return;
                 }
                 if (userCurrentEvent == (int)EventType.HandleOrderDetails)
                 {
                     await _userService.SetCurrentEvent(userId, EventType.HandleOrderCity);
                     await HandleOrderCity5(sender, e);
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {userId} добавил город к заказу");
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} добавил город к заказу");
                     return;
                 }
                 if (userCurrentEvent == (int)EventType.HandleOrderCity && (msg == KeyboardText.PriceRange5_1 || msg == KeyboardText.PriceRange5_2 || msg == KeyboardText.PriceRange5_3 || msg == KeyboardText.PriceRange5_4))
                 {
                     await _userService.SetCurrentEvent(userId, EventType.HandleOrderPriceRange);
                     await HandleOrderPriceRange6(sender, e);
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {userId} определил ценовой диапазон");
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} определил ценовой диапазон");
                     return;
                 }
                 if (userCurrentEvent == (int)EventType.HandleOrderPriceRange)
                 {
                     await _userService.SetCurrentEvent(userId, EventType.HandleOrderDate);
                     await HandleOrderDate7(sender, e);
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {userId} выбрал дату заказа");
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} выбрал дату заказа");
                     return;
                 }
                 if (userCurrentEvent == (int)EventType.HandleOrderDate && msg == KeyboardText.orderAttachments7)
                 {
                     await _userService.SetCurrentEvent(userId, EventType.HandleOrderAttachments);
                     await HandleOrderAttachments8(sender, e);
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {userId} добавил вложения к заказу");
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} добавил вложения к заказу");
                     return;
                 }
                 if (userCurrentEvent == (int)EventType.HandleOrderAttachments || (userCurrentEvent == (int)EventType.HandleOrderDate && msg == KeyboardText.orderReady7))
                 {
                     await _userService.SetCurrentEvent(userId, EventType.HandleStart);
                     await HandleOrderReady9(sender, e);
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {userId} завершил создание заказа ");
+                    Console.WriteLine($"[{DateTime.Now}] Пользователь {userId} завершил создание заказа ");
                     return;
                 }
             }
@@ -138,39 +153,18 @@ namespace Conditery
             }
         }
 
-        private async Task HandleStart(object? sender, GroupUpdateReceivedEventArgs e)
+        async void HandleStart1(object? sender, MessageReceivedEventArgs e)
         {
-            if (e.Update.Type.ToString() == "group_join")
+            await _userService.AddUser(new Models.User
             {
-                try
-                {
-                    var user = await _userService.GetUser(e.Update.GroupJoin.UserId ?? -1);
+                UserId = e.Message.FromId ?? -1,
+                UserEventId = (int)EventType.HandleStart,
+            });
 
-                    if (user is not null)
-                        return;
+            var keyboard = new KeyboardBuilder();
+            keyboard.AddButton(KeyboardText.createOrder1, "", KeyboardButtonColor.Default);
 
-                    await _userService.AddUser(new Models.User
-                    {
-                        UserId = e.Update.GroupJoin.UserId ?? -1,
-                        UserEventId = (int)EventType.HandleStart,
-                    });
-
-                    var keyboard = new KeyboardBuilder();
-                    keyboard.AddButton(KeyboardText.createOrder1, "", KeyboardButtonColor.Default);
-                    await SendMessageAsync(Constants.Message.start1, e.Update.GroupJoin.UserId, keyboard);
-
-                    Console.WriteLine($"[{DateTime.UtcNow}] Пользователь {e.Update.GroupJoin.UserId ?? -1} Подписался на группу");
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"User {e.Update.GroupJoin.UserId ?? -1} " + ex.Message);
-
-                    var keyboard = new KeyboardBuilder();
-                    keyboard.AddButton(KeyboardText.cancelOrder, "", KeyboardButtonColor.Negative);
-
-                    await SendMessageAsync("Что-то пошло не так, нажмите кнопку \"Отменить Заказ\"", e.Update.GroupJoin.UserId, keyboard);
-                }
-            }
+            await SendMessageAsync(Constants.Message.start1, e.Message.FromId, keyboard);
         }
 
         async Task HandleCancelOrder(object? sender, MessageReceivedEventArgs e)
@@ -179,6 +173,7 @@ namespace Conditery
 
             var keyboard = new KeyboardBuilder();
             keyboard.AddButton(KeyboardText.createOrder1, "", KeyboardButtonColor.Default);
+            keyboard.AddButton(KeyboardText.listOrders1, "", KeyboardButtonColor.Default);
 
             await SendMessageAsync(Constants.Message.start1, e.Message.FromId, keyboard);
         }
@@ -205,7 +200,36 @@ namespace Conditery
 
             await SendMessageAsync(Constants.Message.createOrder2, e.Message.FromId, keyboard);
         }
+        async Task HandleGetListOrders2(object? sender, MessageReceivedEventArgs e)
+        {
+            var orders = (await _orderService.GetUserOrders(e.Message.FromId ?? -1)).OrderBy(x=>x.UpdateTime);
 
+            var keyboard = new KeyboardBuilder();
+            foreach (var order in orders)
+            {
+                keyboard.AddButton($"Заказ №{order.Id}", "", KeyboardButtonColor.Default).AddLine();
+            }
+            keyboard.AddButton(KeyboardText.cancelOrder, "", KeyboardButtonColor.Negative);
+
+            await SendMessageAsync(Constants.Message.getListOrders2, e.Message.FromId, keyboard);
+        }
+        async Task HandleGetOrder3(object? sender, MessageReceivedEventArgs e)
+        {
+            long.TryParse(string.Concat(e.Message.Text.Where(Char.IsDigit)),out long orderId);
+            var order = await _orderService.GetOrder(orderId);
+
+            var keyboard = new KeyboardBuilder();
+            keyboard.AddButton(KeyboardText.createOrder1, "", KeyboardButtonColor.Default);
+            keyboard.AddButton(KeyboardText.listOrders1, "", KeyboardButtonColor.Default);
+
+            if (order is null)
+            {
+                await SendMessageAsync("Такого заказа не существует", e.Message.FromId, keyboard);
+                return;
+            }    
+
+            await SendMessageAsync($"\n\nИнформация о заказе:\nТип: {order.Type}\nДетали: {order.Description}\nГород: {order.Location}\nЦеновой диапазон: {order.Price}\nДата исполнения: {order.ExecutionDate.ToShortDateString()}", e.Message.FromId, keyboard);
+        }
         async Task HandlerOrderType3(object? sender, MessageReceivedEventArgs e)
         {
             var keyboard = new KeyboardBuilder();
@@ -252,14 +276,16 @@ namespace Conditery
             await _orderService.UpdateOrder(order);
 
             var keyboard = new KeyboardBuilder();
-            var lastDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month + 1 == 13 ? 12 : DateTime.Now.Month + 1, 1).AddDays(-1).Day;//ето валидирует декабрб
+            var lastDay = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
             var month = DateTime.Now.Month;
+            var year = DateTime.Now.Year;
             for (int i = DateTime.Now.Day + 1, j = 1; j <= 20; i++, j++)
             {
-                keyboard.AddButton(new DateOnly(DateTime.Now.Year, month, i).ToString(), "", KeyboardButtonColor.Default);
+                keyboard.AddButton(new DateOnly(year, month, i).ToString(), "", KeyboardButtonColor.Default);
 
                 if (i == lastDay)
                 {
+                    year = month + 1 == 13 ? ++year : year;
                     month = month + 1 == 13 ? 1 : month + 1;
                     i = 0;
                 }
@@ -309,6 +335,7 @@ namespace Conditery
             var attach = e.Message.Attachments;
             var keyboard = new KeyboardBuilder();
             keyboard.AddButton(KeyboardText.createOrder1, "", KeyboardButtonColor.Default);
+            keyboard.AddButton(KeyboardText.listOrders1, "", KeyboardButtonColor.Default);
 
             await SendMessageAsync(Constants.Message.orderReady + $"\n\nИнформация о заказе:\nТип: {order.Type}\nДетали: {order.Description}\nГород: {order.Location}\nЦеновой диапазон: {order.Price}\nДата исполнения: {order.ExecutionDate.ToShortDateString()}", e.Message.FromId, keyboard, attach.Select(x => x.Instance));
 

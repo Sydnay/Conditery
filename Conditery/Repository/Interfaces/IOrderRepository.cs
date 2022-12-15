@@ -11,6 +11,7 @@ namespace Conditery.Repository
     {
         Task AddOrder(Order order);
         Task<Order> GetOrder(long orderId);
+        Task<List<Order>> GetAllUserOrders(long userId);
         Task<Order> GetIncompleteOrder(long userId);
         Task UpdateOrder(Order order);
         Task DeleteOrder(Order order);
